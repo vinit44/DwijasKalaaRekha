@@ -1,16 +1,20 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
+import { useWishlist } from '../context/WishlistContext'
 
 function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   const { cartItems } = useCart()
+  const { wishlistItems } = useWishlist()
 
   const cartCount = cartItems.reduce(
     (total, item) => total + item.quantity,
     0
   )
+
+  const wishlistCount = wishlistItems.length
 
   return (
     <header className="sticky top-0 z-50 border-b border-[#e8ded3] bg-[#fffdf9]/95 backdrop-blur">
@@ -30,7 +34,6 @@ function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden items-center gap-8 md:flex">
-
             <Link
               to="/"
               className="text-sm font-medium text-[#49352a] transition hover:text-[#8b2f2b]"
@@ -65,7 +68,6 @@ function Navbar() {
             >
               Contact
             </a>
-
           </div>
 
           {/* Desktop Actions */}
@@ -79,6 +81,21 @@ function Navbar() {
             >
               🔍
             </button>
+
+            {/* Wishlist */}
+            <Link
+              to="/wishlist"
+              className="relative flex h-10 w-10 items-center justify-center rounded-full text-xl transition hover:bg-[#f4ebe2]"
+              aria-label="Wishlist"
+            >
+              ♡
+
+              {wishlistCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#6f1d1b] px-1 text-[10px] font-bold text-white">
+                  {wishlistCount}
+                </span>
+              )}
+            </Link>
 
             {/* Cart */}
             <Link
@@ -94,7 +111,6 @@ function Navbar() {
                 </span>
               )}
             </Link>
-
           </div>
 
           {/* Mobile Menu Button */}
@@ -107,7 +123,6 @@ function Navbar() {
           >
             {isMenuOpen ? '✕' : '☰'}
           </button>
-
         </div>
 
         {/* Mobile Navigation */}
@@ -155,7 +170,6 @@ function Navbar() {
                 Contact
               </a>
 
-              {/* Mobile Actions */}
               <div className="flex gap-3 border-t border-[#e8ded3] pt-4">
 
                 {/* Mobile Search */}
@@ -165,6 +179,22 @@ function Navbar() {
                 >
                   🔍 Search
                 </button>
+
+                {/* Mobile Wishlist */}
+                <Link
+                  to="/wishlist"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="relative flex h-10 w-10 items-center justify-center rounded-full text-xl transition hover:bg-[#f4ede5]"
+                  aria-label="Wishlist"
+                >
+                  ♡
+
+                  {wishlistCount > 0 && (
+                    <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#6f1d1b] px-1 text-[10px] font-bold text-white">
+                      {wishlistCount}
+                    </span>
+                  )}
+                </Link>
 
                 {/* Mobile Cart */}
                 <Link
@@ -183,11 +213,9 @@ function Navbar() {
                 </Link>
 
               </div>
-
             </div>
           </div>
         )}
-
       </nav>
     </header>
   )
