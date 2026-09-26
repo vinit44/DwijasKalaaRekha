@@ -4,9 +4,13 @@ const CartContext = createContext()
 
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState(() => {
-    const savedCart = localStorage.getItem('dwijasKalaRekhaCart')
+    const savedCart = localStorage.getItem(
+      'dwijasKalaRekhaCart'
+    )
 
-    return savedCart ? JSON.parse(savedCart) : []
+    return savedCart
+      ? JSON.parse(savedCart)
+      : []
   })
 
   useEffect(() => {
@@ -19,7 +23,8 @@ export function CartProvider({ children }) {
   function addToCart(product) {
     setCartItems((currentItems) => {
       const existingItem = currentItems.find(
-        (item) => item.productId === product.productId
+        (item) =>
+          item.productId === product.productId
       )
 
       if (existingItem) {
@@ -27,7 +32,8 @@ export function CartProvider({ children }) {
           item.productId === product.productId
             ? {
                 ...item,
-                quantity: item.quantity + 1,
+                quantity:
+                  item.quantity + 1,
               }
             : item
         )
@@ -49,7 +55,8 @@ export function CartProvider({ children }) {
         item.productId === productId
           ? {
               ...item,
-              quantity: item.quantity + 1,
+              quantity:
+                item.quantity + 1,
             }
           : item
       )
@@ -63,20 +70,28 @@ export function CartProvider({ children }) {
           item.productId === productId
             ? {
                 ...item,
-                quantity: item.quantity - 1,
+                quantity:
+                  item.quantity - 1,
               }
             : item
         )
-        .filter((item) => item.quantity > 0)
+        .filter(
+          (item) => item.quantity > 0
+        )
     )
   }
 
   function removeFromCart(productId) {
     setCartItems((currentItems) =>
       currentItems.filter(
-        (item) => item.productId !== productId
+        (item) =>
+          item.productId !== productId
       )
     )
+  }
+
+  function clearCart() {
+    setCartItems([])
   }
 
   return (
@@ -87,6 +102,7 @@ export function CartProvider({ children }) {
         increaseQuantity,
         decreaseQuantity,
         removeFromCart,
+        clearCart,
       }}
     >
       {children}

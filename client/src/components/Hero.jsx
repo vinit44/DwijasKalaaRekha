@@ -1,126 +1,243 @@
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+
+const heroImages = [
+  {
+    src: 'https://www.themaevastore.com/cdn/shop/files/240901796_902631060383612_6156662634585683954_n_902631063716945.jpg?v=1755602538&width=1800',
+    alt: 'Green floral fabric rangoli with layered petals and embellishments',
+  },
+  {
+    src: 'https://www.themaevastore.com/cdn/shop/articles/banner1_e20ceb3e-8313-4814-aba9-893f62488c15.jpg?v=1761715247',
+    alt: 'Red and gold reusable floral rangoli',
+  },
+  {
+    src: 'https://desifavors.com/cdn/shop/products/fabric-rangoli-mat-red.jpg',
+    alt: 'Red flower-shaped fabric rangoli mat',
+  },
+  {
+    src: 'https://shagunartsandcrafts.com/wp-content/uploads/2023/07/22982957-a696-4bf4-bd4d-ba643194e108-1.jpeg',
+    alt: 'Colorful handmade floral rangoli mat',
+  },
+]
+
 function Hero() {
+  const [activeImage, setActiveImage] = useState(0)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveImage((current) => (current + 1) % heroImages.length)
+    }, 5000)
+
+    return () => clearInterval(interval)
+  }, [])
+
   return (
     <section
       id="home"
-      className="relative overflow-hidden bg-[#f8f3ed]"
+      className="relative min-h-[calc(100vh-76px)] overflow-hidden bg-[#2b1110] text-white"
     >
-      {/* Decorative background elements */}
-      <div className="absolute -left-24 top-20 h-64 w-64 rounded-full bg-[#ead8c7] opacity-40 blur-3xl" />
+      {/* ================= BACKGROUND SLIDESHOW ================= */}
+      <div className="absolute inset-0">
 
-      <div className="absolute -right-24 bottom-0 h-72 w-72 rounded-full bg-[#d9b89c] opacity-30 blur-3xl" />
+        {heroImages.map((image, index) => (
+          <div
+            key={image.src}
+            className={`absolute inset-0 transition-opacity duration-[1600ms] ease-in-out ${
+              activeImage === index ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            <img
+              src={image.src}
+              alt={image.alt}
+              className={`h-full w-full object-cover transition-transform duration-[7000ms] ease-out ${
+                activeImage === index ? 'scale-110' : 'scale-100'
+              }`}
+              onError={(event) => {
+                event.currentTarget.style.display = 'none'
+              }}
+            />
+          </div>
+        ))}
 
-      <div className="relative mx-auto grid min-h-[calc(100vh-80px)] max-w-7xl items-center gap-12 px-5 py-16 sm:px-6 lg:grid-cols-2 lg:gap-20 lg:py-20">
+        {/* Left cinematic shade */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#210b09]/95 via-[#421713]/72 to-[#3b1510]/25" />
 
-        {/* Left Content */}
-        <div className="max-w-2xl">
+        {/* Warm colour wash */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#8d3b28]/15 via-transparent to-[#c99a4a]/10" />
 
-          <p className="mb-5 text-xs font-semibold uppercase tracking-[0.35em] text-[#8b2f2b]">
-            Handcrafted • Tradition • Elegance
-          </p>
+        {/* Bottom depth */}
+        <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-[#2b1110] via-[#2b1110]/65 to-transparent" />
 
-          <h1 className="text-5xl font-bold leading-[1.05] tracking-tight text-[#35251d] sm:text-6xl lg:text-7xl">
-            Bring Your
-            <span className="block text-[#6f1d1b]">
-              Space to Life.
+      </div>
+
+      {/* ================= DECORATIVE ELEMENTS ================= */}
+
+      <div className="pointer-events-none absolute right-[8%] top-[18%] hidden lg:block">
+        <div className="h-36 w-36 rotate-45 border border-[#e2bd76]/30" />
+        <div className="absolute inset-6 rotate-45 border border-[#e2bd76]/20" />
+        <div className="absolute inset-[58px] rotate-45 bg-[#e2bd76]/20" />
+      </div>
+
+      <div className="pointer-events-none absolute bottom-[18%] right-[22%] hidden h-2 w-2 rounded-full bg-[#e2bd76]/70 lg:block" />
+
+      <div className="pointer-events-none absolute left-[45%] top-[22%] hidden h-1.5 w-1.5 rounded-full bg-[#f2d69c]/70 lg:block" />
+
+      {/* ================= MAIN CONTENT ================= */}
+
+      <div className="relative mx-auto flex min-h-[calc(100vh-76px)] max-w-[1400px] items-end px-5 pb-20 pt-28 sm:px-8 sm:pb-24 lg:items-center lg:px-12">
+
+        <div className="max-w-3xl">
+
+          {/* Brand line */}
+          <div className="flex items-center gap-4">
+            <span className="h-px w-14 bg-[#e3bd78]" />
+
+            <p className="text-[10px] font-semibold uppercase tracking-[0.42em] text-[#f0d39a]">
+              DwijasKalaRekha
+            </p>
+          </div>
+
+          {/* Heading */}
+          <h1
+            key={`heading-${activeImage}`}
+            className="mt-7 animate-[fadeIn_0.9s_ease-out] font-serif text-5xl font-medium leading-[0.94] tracking-tight text-white sm:text-6xl lg:text-[80px]"
+          >
+            Colour your
+            <span className="block text-[#efc879]">
+              traditions.
             </span>
           </h1>
 
-          <p className="mt-6 max-w-xl text-base leading-7 text-[#705d50] sm:text-lg">
-            Discover beautiful rangoli designs created to bring
-            tradition, colour and elegance into every celebration.
+          {/* Description */}
+          <p
+            key={`description-${activeImage}`}
+            className="mt-7 max-w-xl animate-[fadeIn_1s_ease-out_0.1s_both] text-sm leading-7 text-white/85 sm:text-base lg:text-lg"
+          >
+            Handcrafted floral rangoli designs made to bring
+            colour, warmth and character to your home.
           </p>
 
           {/* Buttons */}
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
 
-            <button
-              type="button"
-              className="rounded-full bg-[#6f1d1b] px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-[#6f1d1b]/20 transition duration-300 hover:-translate-y-1 hover:bg-[#581716]"
+            <Link
+              to="/shop"
+              className="group inline-flex items-center justify-center gap-3 bg-[#f3dfbd] px-8 py-4 text-sm font-semibold text-[#541a18] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#fff7e8] hover:shadow-xl hover:shadow-black/15"
             >
-              Shop Collection
-            </button>
+              Explore Rangoli
 
-            <button
-              type="button"
-              className="rounded-full border border-[#b99b82] bg-white/50 px-8 py-4 text-sm font-semibold text-[#6f1d1b] backdrop-blur transition duration-300 hover:bg-white"
+              <span className="transition-transform duration-300 group-hover:translate-x-1">
+                →
+              </span>
+            </Link>
+
+            <a
+              href="#collections"
+              className="group inline-flex items-center justify-center gap-3 border border-[#e6c58b]/70 bg-[#2b1110]/20 px-8 py-4 text-sm font-medium text-white backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-[#f0cf8e] hover:bg-white/10"
             >
-              Explore Designs
-            </button>
+              View Collections
+
+              <span className="transition-transform duration-300 group-hover:translate-y-1">
+                ↓
+              </span>
+            </a>
 
           </div>
 
-          {/* Trust indicators */}
-          <div className="mt-10 flex flex-wrap gap-x-8 gap-y-4 text-sm text-[#806c5d]">
+          {/* Product qualities */}
+          <div className="mt-12 flex flex-wrap items-center gap-x-7 gap-y-3 border-t border-white/20 pt-5">
 
-            <div>
-              <strong className="block text-lg text-[#35251d]">
-                ✦
-              </strong>
-              Traditional Designs
-            </div>
+            <span className="text-[10px] font-medium uppercase tracking-[0.25em] text-white/80">
+              Handmade
+            </span>
 
-            <div>
-              <strong className="block text-lg text-[#35251d]">
-                ✦
-              </strong>
-              Premium Quality
-            </div>
+            <span className="h-1 w-1 rounded-full bg-[#e7bd71]" />
 
-            <div>
-              <strong className="block text-lg text-[#35251d]">
-                ✦
-              </strong>
-              Made With Care
-            </div>
+            <span className="text-[10px] font-medium uppercase tracking-[0.25em] text-white/80">
+              Reusable
+            </span>
+
+            <span className="h-1 w-1 rounded-full bg-[#e7bd71]" />
+
+            <span className="text-[10px] font-medium uppercase tracking-[0.25em] text-white/80">
+              Floral Designs
+            </span>
 
           </div>
+
+        </div>
+      </div>
+
+      {/* ================= SLIDE CONTROLS ================= */}
+
+      <div className="absolute bottom-8 right-5 flex items-center gap-5 sm:right-10">
+
+        <div className="flex items-center gap-2 text-xs tracking-[0.2em] text-white/60">
+
+          <span className="font-semibold text-[#f0d19a]">
+            {String(activeImage + 1).padStart(2, '0')}
+          </span>
+
+          <span className="text-white/30">
+            /
+          </span>
+
+          <span>
+            {String(heroImages.length).padStart(2, '0')}
+          </span>
+
         </div>
 
-        {/* Right Visual */}
-        <div className="relative mx-auto w-full max-w-xl">
+        <div className="flex items-center gap-2">
 
-          {/* Outer decorative circle */}
-          <div className="absolute inset-4 rounded-full border border-[#b99b82]/40" />
-
-          {/* Main visual */}
-          <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-[3rem] bg-[#ead8c7] shadow-2xl shadow-[#6f1d1b]/10">
-
-            <div className="absolute inset-8 rounded-full border border-[#8b2f2b]/20" />
-
-            <div className="relative flex h-[70%] w-[70%] items-center justify-center rounded-full border-8 border-[#6f1d1b]/20 bg-[#f8eee4]">
-
-              <div className="text-center">
-                <div className="text-7xl sm:text-8xl">
-                  ✿
-                </div>
-
-                <p className="mt-4 text-xs font-semibold uppercase tracking-[0.3em] text-[#6f1d1b]">
-                  DwijasKalaRekha
-                </p>
-
-                <p className="mt-2 text-sm text-[#806c5d]">
-                  Crafted for celebrations
-                </p>
-              </div>
-
-            </div>
-
-          </div>
-
-          {/* Floating badge */}
-          <div className="absolute -bottom-4 -left-2 rounded-2xl border border-[#ead8c7] bg-white px-5 py-4 shadow-xl sm:-left-6">
-            <p className="text-xs uppercase tracking-widest text-[#9a806b]">
-              Discover
-            </p>
-
-            <p className="mt-1 font-semibold text-[#35251d]">
-              Beautiful Rangoli
-            </p>
-          </div>
+          {heroImages.map((image, index) => (
+            <button
+              key={image.src}
+              type="button"
+              onClick={() => setActiveImage(index)}
+              aria-label={`Show rangoli image ${index + 1}`}
+              className={`h-1 transition-all duration-500 ${
+                activeImage === index
+                  ? 'w-10 bg-[#f0d19a]'
+                  : 'w-4 bg-white/40 hover:bg-white/80'
+              }`}
+            />
+          ))}
 
         </div>
 
       </div>
+
+      {/* ================= SIDE LABEL ================= */}
+
+      <div className="absolute bottom-10 left-6 hidden lg:block">
+
+        <div className="flex items-center gap-3 [writing-mode:vertical-rl]">
+
+          <span className="text-[9px] uppercase tracking-[0.35em] text-white/50">
+            Fabric • Floral • Celebration
+          </span>
+
+          <span className="h-12 w-px bg-[#d8b27c]/60" />
+
+        </div>
+
+      </div>
+
+      {/* ================= SCROLL INDICATOR ================= */}
+
+      <div className="absolute bottom-7 left-1/2 hidden -translate-x-1/2 items-center gap-3 text-white/60 md:flex">
+
+        <span className="text-[9px] uppercase tracking-[0.35em]">
+          Discover
+        </span>
+
+        <span className="animate-bounce">
+          ↓
+        </span>
+
+      </div>
+
     </section>
   )
 }
