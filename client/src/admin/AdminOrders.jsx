@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-
-const API_URL = 'http://localhost:5000'
+import API_URL from '../config/api'
 
 function AdminOrders() {
   const [orders, setOrders] = useState([])
@@ -219,6 +218,7 @@ function AdminOrders() {
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#8B6A25]">
                 DwijasKalaRekha
               </p>
+
               <p className="text-xs text-[#806F67]">
                 Admin workspace
               </p>
@@ -267,6 +267,7 @@ function AdminOrders() {
                   Products
                 </Link>
               </div>
+
             </div>
           </div>
         </section>

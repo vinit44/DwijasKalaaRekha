@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getProducts } from '../services/productService'
 import { Link } from 'react-router-dom'
+import API_URL from '../config/api'
 
 function AdminProducts() {
   const [products, setProducts] = useState([])
@@ -41,7 +42,7 @@ function AdminProducts() {
       setError('')
 
       const response = await fetch(
-        `http://localhost:5000/api/products/${productId}`,
+        `${API_URL}/api/products/${productId}`,
         {
           method: 'DELETE',
           headers: {

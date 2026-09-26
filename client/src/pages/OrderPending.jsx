@@ -7,7 +7,7 @@ import {
   useLocation,
   useNavigate,
 } from 'react-router-dom'
-
+import API_URL from '../config/api'
 function OrderPending() {
   const location = useLocation()
   const navigate = useNavigate()
@@ -70,11 +70,11 @@ function OrderPending() {
     async function checkOrderStatus() {
       try {
         const response =
-          await fetch(
-            `http://localhost:5000/api/orders/status/${order.orderId}?mobile=${encodeURIComponent(
-              mobile
-            )}`
-          )
+         await fetch(
+  `${API_URL}/api/orders/status/${order.orderId}?mobile=${encodeURIComponent(
+    mobile
+  )}`
+)
 
         const data =
           await response.json()

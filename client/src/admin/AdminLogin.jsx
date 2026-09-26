@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import API_URL from '../config/api'
 
 function AdminLogin() {
   const navigate = useNavigate()
@@ -17,7 +18,7 @@ function AdminLogin() {
 
     try {
       const response = await fetch(
-        'http://localhost:5000/api/auth/login',
+        `${API_URL}/api/auth/login`,
         {
           method: 'POST',
           headers: {

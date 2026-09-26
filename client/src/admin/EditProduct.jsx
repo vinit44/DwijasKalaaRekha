@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { getProductById } from '../services/productService'
-
-const API_URL = 'http://localhost:5000'
+import API_URL from '../config/api'
 
 function EditProduct() {
   const { id } = useParams()

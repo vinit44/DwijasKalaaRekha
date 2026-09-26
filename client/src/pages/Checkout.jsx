@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
-
-const API_URL = 'http://localhost:5000'
+import API_URL from '../config/api'
 const WHATSAPP_NUMBER = '919321510370'
 
 const INDIAN_STATES = [
@@ -177,10 +176,6 @@ function Checkout() {
       pincode: '',
     })
 
-  const [cities, setCities] = useState([])
-  const [isLoadingCities, setIsLoadingCities] =
-    useState(false)
-
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] =
     useState(false)
@@ -199,84 +194,6 @@ function Checkout() {
 
   const total =
     subtotal + deliveryCharge
-
-  /*
-  ==================================================
-  LOAD CITIES
-  ==================================================
-  */
-
-  useEffect(() => {
-    if (!customerData.state) {
-      setCities([])
-      return
-    }
-
-    async function loadCities() {
-      try {
-        setIsLoadingCities(true)
-        setCities([])
-
-        const response = await fetch(
-          'https://countriesnow.space/api/v0.1/countries/state/cities',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type':
-                'application/json',
-            },
-            body: JSON.stringify({
-              country: 'India',
-              state: customerData.state,
-            }),
-          }
-        )
-
-        const data =
-          await response.json()
-
-        if (
-          !response.ok ||
-          data.error ||
-          !Array.isArray(data.data)
-        ) {
-          throw new Error(
-            'Unable to load cities'
-          )
-        }
-
-        const uniqueCities = [
-          ...new Set(
-            data.data
-              .filter(
-                (city) =>
-                  typeof city ===
-                    'string' &&
-                  city.trim()
-              )
-              .map((city) =>
-                city.trim()
-              )
-          ),
-        ].sort((a, b) =>
-          a.localeCompare(b)
-        )
-
-        setCities(uniqueCities)
-      } catch (error) {
-        console.error(
-          'Load cities failed:',
-          error
-        )
-
-        setCities([])
-      } finally {
-        setIsLoadingCities(false)
-      }
-    }
-
-    loadCities()
-  }, [customerData.state])
 
   /*
   ==================================================
@@ -345,7 +262,6 @@ function Checkout() {
         })
       )
 
-      setCities([])
 
       setErrors(
         (currentErrors) => ({
@@ -421,7 +337,7 @@ function Checkout() {
 
     if (!customerData.city.trim()) {
       newErrors.city =
-        'Please select a city'
+        'City is required'
     }
 
     if (!customerData.pincode.trim()) {
@@ -916,31 +832,19 @@ Thank you for choosing DwijasKalaRekha.`
                     required
                   />
 
-                  <SelectField
+                  <InputField
                     label="City"
                     name="city"
                     value={
                       customerData.city
                     }
-                    options={cities}
                     error={
                       errors.city
                     }
                     onChange={
                       handleChange
                     }
-                    placeholder={
-                      customerData.state
-                        ? 'Select city'
-                        : 'Select state first'
-                    }
-                    disabled={
-                      !customerData.state ||
-                      isLoadingCities
-                    }
-                    loading={
-                      isLoadingCities
-                    }
+                    placeholder="Enter city / town"
                     required
                   />
 
@@ -964,23 +868,6 @@ Thank you for choosing DwijasKalaRekha.`
 
                 </div>
 
-                {customerData.state &&
-                  isLoadingCities && (
-                    <p className="mt-4 text-xs text-[#897970]">
-                      Loading cities for{' '}
-                      {customerData.state}...
-                    </p>
-                  )}
-
-                {customerData.state &&
-                  !isLoadingCities &&
-                  cities.length === 0 && (
-                    <p className="mt-4 text-xs text-[#b43b35]">
-                      Cities could not be loaded.
-                      Please check your internet
-                      connection and try again.
-                    </p>
-                  )}
 
               </div>
 
