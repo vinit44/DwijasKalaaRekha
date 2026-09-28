@@ -459,7 +459,7 @@ Thank you for choosing DwijasKalaRekha.`
 
   async function handlePlaceOrder(event) {
     event.preventDefault()
-
+    const whatsappWindow = window.open('', '_blank')
     setSubmitError('')
 
     if (!validateForm()) {
@@ -558,11 +558,11 @@ Thank you for choosing DwijasKalaRekha.`
         `?text=${encodeURIComponent(
           whatsappMessage
         )}`
-
-      window.open(
-        whatsappUrl,
-        '_blank'
-      )
+if (whatsappWindow) {
+  whatsappWindow.location.href = whatsappUrl
+} else {
+  window.location.href = whatsappUrl
+}
 
       clearCart()
 

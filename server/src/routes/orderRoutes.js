@@ -12,8 +12,8 @@ DELIVERY DISTANCE CONFIGURATION
 */
 
 const BORIVALI_COORDINATES = {
-  latitude: 19.228825,
-  longitude: 72.854118,
+  latitude: 19.2306,
+  longitude: 72.8636,
 }
 
 // OpenStreetMap Nominatim
