@@ -9,8 +9,16 @@ function AdminOrderDetails() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [confirming, setConfirming] = useState(false)
+  const [selectedStatus, setSelectedStatus] = useState('')
+  const [updatingStatus, setUpdatingStatus] = useState(false)
 
   const token = localStorage.getItem('adminToken')
+
+  /*
+  ==================================================
+  FETCH ORDER
+  ==================================================
+  */
 
   async function fetchOrder() {
     try {
@@ -35,6 +43,10 @@ function AdminOrderDetails() {
       }
 
       setOrder(data.order)
+
+      setSelectedStatus(
+        data.order.orderStatus || 'Confirmed'
+      )
     } catch (error) {
       console.error(error)
       setError(error.message)
@@ -46,6 +58,12 @@ function AdminOrderDetails() {
   useEffect(() => {
     fetchOrder()
   }, [orderId])
+
+  /*
+  ==================================================
+  CONFIRM PAYMENT
+  ==================================================
+  */
 
   async function confirmPayment() {
     const confirmed = window.confirm(
@@ -73,13 +91,20 @@ function AdminOrderDetails() {
 
       if (!response.ok) {
         throw new Error(
-          data.message || 'Failed to confirm payment'
+          data.message ||
+            'Failed to confirm payment'
         )
       }
 
       setOrder(data.order)
 
-      alert('Payment confirmed successfully.')
+      setSelectedStatus(
+        data.order.orderStatus || 'Confirmed'
+      )
+
+      alert(
+        'Payment confirmed successfully.'
+      )
     } catch (error) {
       console.error(error)
       alert(error.message)
@@ -88,58 +113,198 @@ function AdminOrderDetails() {
     }
   }
 
-  const formatDate = (date) => {
-    if (!date) return '—'
+  /*
+  ==================================================
+  UPDATE ORDER STATUS
+  ==================================================
+  */
 
-    return new Date(date).toLocaleString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
+  async function updateOrderStatus() {
+    if (!selectedStatus) {
+      alert('Please select an order status.')
+      return
+    }
+
+    if (
+      selectedStatus ===
+      order.orderStatus
+    ) {
+      alert(
+        'Order is already in this status.'
+      )
+      return
+    }
+
+    const confirmed = window.confirm(
+      `Update order status for ${orderId} to "${selectedStatus}"?`
+    )
+
+    if (!confirmed) {
+      return
+    }
+
+    try {
+      setUpdatingStatus(true)
+
+      const response = await fetch(
+        `${API_URL}/api/orders/${orderId}/status`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type':
+              'application/json',
+          },
+          body: JSON.stringify({
+            orderStatus: selectedStatus,
+          }),
+        }
+      )
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            'Failed to update order status'
+        )
+      }
+
+      setOrder(data.order)
+
+      setSelectedStatus(
+        data.order.orderStatus ||
+          selectedStatus
+      )
+
+      alert(
+        'Order status updated successfully.'
+      )
+    } catch (error) {
+      console.error(error)
+      alert(error.message)
+    } finally {
+      setUpdatingStatus(false)
+    }
+  }
+
+  /*
+  ==================================================
+  HELPERS
+  ==================================================
+  */
+
+  const formatDate = (date) => {
+    if (!date) {
+      return '—'
+    }
+
+    return new Date(date).toLocaleString(
+      'en-IN',
+      {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }
+    )
   }
 
   const formatCurrency = (value) => {
-    return `₹${Number(value || 0).toLocaleString('en-IN')}`
+    return `₹${Number(
+      value || 0
+    ).toLocaleString('en-IN')}`
   }
 
   const getPaymentStyles = (status) => {
     if (status === 'Paid') {
       return {
-        wrapper: 'border-[#D8E3CC] bg-[#EEF4E8]',
+        wrapper:
+          'border-[#D8E3CC] bg-[#EEF4E8]',
         dot: 'bg-[#65754A]',
         text: 'text-[#52613B]',
       }
     }
 
     return {
-      wrapper: 'border-[#E7D6A8] bg-[#FFF6DF]',
+      wrapper:
+        'border-[#E7D6A8] bg-[#FFF6DF]',
       dot: 'bg-[#C99A4A]',
       text: 'text-[#8B6A25]',
     }
   }
 
-  const getOrderStatusStyles = (status) => {
-    const value = String(status || '').toLowerCase()
+  const getOrderStatusStyles = (
+    status
+  ) => {
+    const value = String(
+      status || ''
+    ).toLowerCase()
 
     if (value === 'confirmed') {
-      return 'border-[#D8E3CC] bg-[#EEF4E8] text-[#52613B]'
+      return (
+        'border-[#D8E3CC] bg-[#EEF4E8] text-[#52613B]'
+      )
     }
 
     if (
       value === 'cancelled' ||
       value === 'canceled'
     ) {
-      return 'border-[#E8CACA] bg-[#FAEEEE] text-[#8A4141]'
+      return (
+        'border-[#E8CACA] bg-[#FAEEEE] text-[#8A4141]'
+      )
     }
 
     if (value === 'pending') {
-      return 'border-[#E7D6A8] bg-[#FFF6DF] text-[#8B6A25]'
+      return (
+        'border-[#E7D6A8] bg-[#FFF6DF] text-[#8B6A25]'
+      )
     }
 
-    return 'border-[#DDD1CA] bg-[#F6F1EC] text-[#675953]'
+    if (value === 'processing') {
+      return (
+        'border-[#D9D1E8] bg-[#F2EEF8] text-[#624C7C]'
+      )
+    }
+
+    if (value === 'packed') {
+      return (
+        'border-[#E8D5BD] bg-[#FAF0E3] text-[#8A6338]'
+      )
+    }
+
+    if (value === 'shipped') {
+      return (
+        'border-[#CFE0E7] bg-[#EDF5F8] text-[#426775]'
+      )
+    }
+
+    if (
+      value === 'out for delivery'
+    ) {
+      return (
+        'border-[#E5D7B8] bg-[#FAF5E7] text-[#806629]'
+      )
+    }
+
+    if (value === 'delivered') {
+      return (
+        'border-[#C9DEC8] bg-[#EDF6EC] text-[#4E704B]'
+      )
+    }
+
+    return (
+      'border-[#DDD1CA] bg-[#F6F1EC] text-[#675953]'
+    )
   }
+
+  /*
+  ==================================================
+  LOADING
+  ==================================================
+  */
 
   if (loading) {
     return (
@@ -167,11 +332,16 @@ function AdminOrderDetails() {
     )
   }
 
+  /*
+  ==================================================
+  ERROR
+  ==================================================
+  */
+
   if (error || !order) {
     return (
       <div className="min-h-screen bg-[#F8F1E5] px-4 py-6 md:px-8">
         <div className="mx-auto max-w-6xl">
-
           <Link
             to="/admin/orders"
             className="inline-flex items-center gap-2 text-sm font-semibold text-[#54244F] transition hover:text-[#B85C38]"
@@ -183,7 +353,6 @@ function AdminOrderDetails() {
             <div className="h-2 bg-[#54244F]" />
 
             <div className="px-6 py-16 text-center">
-
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#FAEEEE] text-xl text-[#8A4141]">
                 !
               </div>
@@ -193,7 +362,8 @@ function AdminOrderDetails() {
               </h1>
 
               <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#806F67]">
-                {error || 'The requested order could not be found.'}
+                {error ||
+                  'The requested order could not be found.'}
               </p>
 
               <Link
@@ -202,32 +372,39 @@ function AdminOrderDetails() {
               >
                 Back to Orders
               </Link>
-
             </div>
           </div>
-
         </div>
       </div>
     )
   }
 
-  const paymentStyles = getPaymentStyles(
-    order.paymentStatus
-  )
+  const paymentStyles =
+    getPaymentStyles(
+      order.paymentStatus
+    )
 
-  const itemCount = order.items?.reduce(
-    (total, item) =>
-      total + Number(item.quantity || 0),
-    0
-  )
+  const itemCount =
+    order.items?.reduce(
+      (total, item) =>
+        total +
+        Number(item.quantity || 0),
+      0
+    )
+
+  /*
+  ==================================================
+  MAIN UI
+  ==================================================
+  */
 
   return (
     <div className="min-h-screen bg-[#F8F1E5] px-4 py-6 md:px-8 md:py-8">
       <div className="mx-auto max-w-6xl">
 
         {/* TOP BAR */}
-        <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
+        <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <Link
             to="/admin/orders"
             className="inline-flex w-fit items-center gap-2 text-sm font-semibold text-[#54244F] transition hover:text-[#B85C38]"
@@ -238,25 +415,26 @@ function AdminOrderDetails() {
           <div className="flex items-center gap-2">
             <span className="rounded-full border border-[#E2D4C7] bg-[#FFFDF8] px-3 py-1.5 text-xs font-semibold text-[#675953]">
               {itemCount || 0}{' '}
-              {itemCount === 1 ? 'item' : 'items'}
+              {itemCount === 1
+                ? 'item'
+                : 'items'}
             </span>
 
             <span className="rounded-full border border-[#E2D4C7] bg-[#FFFDF8] px-3 py-1.5 text-xs font-semibold text-[#675953]">
-              {formatDate(order.createdAt)}
+              {formatDate(
+                order.createdAt
+              )}
             </span>
           </div>
-
         </div>
 
         {/* HEADER */}
-        <section className="overflow-hidden rounded-[28px] border border-[#E4D6C8] bg-[#FFFDF8] shadow-[0_12px_40px_rgba(75,45,35,0.06)]">
 
+        <section className="overflow-hidden rounded-[28px] border border-[#E4D6C8] bg-[#FFFDF8] shadow-[0_12px_40px_rgba(75,45,35,0.06)]">
           <div className="h-2 bg-[#54244F]" />
 
           <div className="px-5 py-7 md:px-8 md:py-8">
-
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-
               <div>
                 <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-[#B85C38]">
                   Order Details
@@ -267,19 +445,23 @@ function AdminOrderDetails() {
                 </h1>
 
                 <p className="mt-2 text-sm text-[#806F67]">
-                  Created on {formatDate(order.createdAt)}
+                  Created on{' '}
+                  {formatDate(
+                    order.createdAt
+                  )}
                 </p>
               </div>
 
               <div className="flex flex-wrap gap-2">
-
                 <span
                   className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-bold ${paymentStyles.wrapper} ${paymentStyles.text}`}
                 >
                   <span
                     className={`h-2 w-2 rounded-full ${paymentStyles.dot}`}
                   />
-                  Payment: {order.paymentStatus}
+
+                  Payment:{' '}
+                  {order.paymentStatus}
                 </span>
 
                 <span
@@ -287,27 +469,26 @@ function AdminOrderDetails() {
                     order.orderStatus
                   )}`}
                 >
-                  Order: {order.orderStatus}
+                  Order:{' '}
+                  {order.orderStatus}
                 </span>
-
               </div>
-
             </div>
-
           </div>
         </section>
 
         {/* MAIN GRID */}
+
         <div className="mt-5 grid gap-5 lg:grid-cols-3">
 
-          {/* LEFT */}
+          {/* LEFT COLUMN */}
+
           <div className="space-y-5 lg:col-span-2">
 
             {/* CUSTOMER */}
+
             <section className="rounded-[24px] border border-[#E4D6C8] bg-[#FFFDF8] p-5 shadow-[0_8px_25px_rgba(75,45,35,0.04)] md:p-6">
-
               <div className="flex items-start justify-between gap-4">
-
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#B85C38]">
                     Customer
@@ -321,18 +502,17 @@ function AdminOrderDetails() {
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F3E9DD] text-sm font-bold text-[#54244F]">
                   C
                 </div>
-
               </div>
 
               <div className="mt-6 grid gap-5 sm:grid-cols-2">
-
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-[#91827A]">
                     Full Name
                   </p>
 
                   <p className="mt-1.5 font-semibold text-[#40312D]">
-                    {order.customer?.fullName || '—'}
+                    {order.customer
+                      ?.fullName || '—'}
                   </p>
                 </div>
 
@@ -342,11 +522,13 @@ function AdminOrderDetails() {
                   </p>
 
                   <p className="mt-1.5 font-semibold text-[#40312D]">
-                    {order.customer?.mobile || '—'}
+                    {order.customer
+                      ?.mobile || '—'}
                   </p>
                 </div>
 
-                {order.customer?.email && (
+                {order.customer
+                  ?.email && (
                   <div className="sm:col-span-2">
                     <p className="text-xs font-semibold uppercase tracking-wide text-[#91827A]">
                       Email
@@ -357,14 +539,12 @@ function AdminOrderDetails() {
                     </p>
                   </div>
                 )}
-
               </div>
-
             </section>
 
             {/* ADDRESS */}
-            <section className="rounded-[24px] border border-[#E4D6C8] bg-[#FFFDF8] p-5 shadow-[0_8px_25px_rgba(75,45,35,0.04)] md:p-6">
 
+            <section className="rounded-[24px] border border-[#E4D6C8] bg-[#FFFDF8] p-5 shadow-[0_8px_25px_rgba(75,45,35,0.04)] md:p-6">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#B85C38]">
                   Delivery
@@ -376,38 +556,38 @@ function AdminOrderDetails() {
               </div>
 
               <div className="mt-5 rounded-2xl border border-[#E7DCCF] bg-[#F8F1E5] p-5">
-
                 <p className="font-semibold leading-6 text-[#40312D]">
-                  {order.customer?.address || '—'}
+                  {order.customer
+                    ?.address || '—'}
                 </p>
 
                 <div className="mt-3 flex flex-wrap gap-x-2 gap-y-1 text-sm text-[#75665F]">
                   <span>
-                    {order.customer?.city || '—'}
+                    {order.customer
+                      ?.city || '—'}
                   </span>
 
                   <span>•</span>
 
                   <span>
-                    {order.customer?.state || '—'}
+                    {order.customer
+                      ?.state || '—'}
                   </span>
 
                   <span>•</span>
 
                   <span>
-                    {order.customer?.pincode || '—'}
+                    {order.customer
+                      ?.pincode || '—'}
                   </span>
                 </div>
-
               </div>
-
             </section>
 
             {/* PRODUCTS */}
+
             <section className="rounded-[24px] border border-[#E4D6C8] bg-[#FFFDF8] p-5 shadow-[0_8px_25px_rgba(75,45,35,0.04)] md:p-6">
-
               <div className="flex items-end justify-between gap-4">
-
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#B85C38]">
                     Order Items
@@ -419,92 +599,95 @@ function AdminOrderDetails() {
                 </div>
 
                 <span className="text-xs font-semibold text-[#806F67]">
-                  {order.items?.length || 0}{' '}
-                  {order.items?.length === 1
+                  {order.items
+                    ?.length || 0}{' '}
+                  {order.items
+                    ?.length === 1
                     ? 'product'
                     : 'products'}
                 </span>
-
               </div>
 
               <div className="mt-5 space-y-3">
+                {order.items?.map(
+                  (item, index) => (
+                    <div
+                      key={`${item.productId}-${index}`}
+                      className="flex flex-col gap-4 rounded-2xl border border-[#E8DDD3] bg-[#FFFCF7] p-4 sm:flex-row"
+                    >
+                      {/* IMAGE */}
 
-                {order.items?.map((item, index) => (
-                  <div
-                    key={`${item.productId}-${index}`}
-                    className="flex flex-col gap-4 rounded-2xl border border-[#E8DDD3] bg-[#FFFCF7] p-4 sm:flex-row"
-                  >
+                      <div className="h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-[#F3E8DA]">
+                        {item.image ? (
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full items-center justify-center text-xs font-semibold text-[#9A8980]">
+                            No image
+                          </div>
+                        )}
+                      </div>
 
-                    {/* IMAGE */}
-                    <div className="h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-[#F3E8DA]">
+                      {/* DETAILS */}
 
-                      {item.image ? (
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full items-center justify-center text-xs font-semibold text-[#9A8980]">
-                          No image
-                        </div>
-                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
+                          <div>
+                            <h3 className="font-bold text-[#40312D]">
+                              {item.name}
+                            </h3>
 
-                    </div>
+                            <p className="mt-1 break-all text-xs text-[#91827A]">
+                              Product ID:{' '}
+                              {item.productId}
+                            </p>
+                          </div>
 
-                    {/* DETAILS */}
-                    <div className="min-w-0 flex-1">
-
-                      <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
-
-                        <div>
-                          <h3 className="font-bold text-[#40312D]">
-                            {item.name}
-                          </h3>
-
-                          <p className="mt-1 break-all text-xs text-[#91827A]">
-                            Product ID: {item.productId}
+                          <p className="font-bold text-[#54244F]">
+                            {formatCurrency(
+                              Number(
+                                item.price ||
+                                  0
+                              ) *
+                                Number(
+                                  item.quantity ||
+                                    0
+                                )
+                            )}
                           </p>
                         </div>
 
-                        <p className="font-bold text-[#54244F]">
-                          {formatCurrency(
-                            Number(item.price || 0) *
-                              Number(item.quantity || 0)
-                          )}
-                        </p>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          <span className="rounded-lg border border-[#E2D5CA] bg-[#F8F1E5] px-3 py-1.5 text-xs font-semibold text-[#675953]">
+                            Qty:{' '}
+                            {item.quantity}
+                          </span>
 
+                          <span className="rounded-lg border border-[#E2D5CA] bg-[#F8F1E5] px-3 py-1.5 text-xs font-semibold text-[#675953]">
+                            Unit:{' '}
+                            {formatCurrency(
+                              item.price
+                            )}
+                          </span>
+                        </div>
                       </div>
-
-                      <div className="mt-4 flex flex-wrap gap-2">
-
-                        <span className="rounded-lg border border-[#E2D5CA] bg-[#F8F1E5] px-3 py-1.5 text-xs font-semibold text-[#675953]">
-                          Qty: {item.quantity}
-                        </span>
-
-                        <span className="rounded-lg border border-[#E2D5CA] bg-[#F8F1E5] px-3 py-1.5 text-xs font-semibold text-[#675953]">
-                          Unit: {formatCurrency(item.price)}
-                        </span>
-
-                      </div>
-
                     </div>
-
-                  </div>
-                ))}
-
+                  )
+                )}
               </div>
-
             </section>
-
           </div>
 
-          {/* RIGHT */}
+          {/* RIGHT COLUMN */}
+
           <div className="space-y-5">
 
             {/* PAYMENT SUMMARY */}
-            <section className="rounded-[24px] border border-[#E4D6C8] bg-[#FFFDF8] p-5 shadow-[0_8px_25px_rgba(75,45,35,0.04)] md:p-6">
 
+            <section className="rounded-[24px] border border-[#E4D6C8] bg-[#FFFDF8] p-5 shadow-[0_8px_25px_rgba(75,45,35,0.04)] md:p-6">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#B85C38]">
                   Billing
@@ -516,7 +699,6 @@ function AdminOrderDetails() {
               </div>
 
               <div className="mt-5 space-y-4">
-
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-sm text-[#806F67]">
                     Payment Status
@@ -530,14 +712,15 @@ function AdminOrderDetails() {
                 </div>
 
                 <div className="border-t border-[#E9DED4] pt-4">
-
                   <div className="flex justify-between">
                     <span className="text-sm text-[#806F67]">
                       Subtotal
                     </span>
 
                     <span className="text-sm font-semibold text-[#40312D]">
-                      {formatCurrency(order.subtotal)}
+                      {formatCurrency(
+                        order.subtotal
+                      )}
                     </span>
                   </div>
 
@@ -547,36 +730,38 @@ function AdminOrderDetails() {
                     </span>
 
                     <span className="text-sm font-semibold text-[#52613B]">
-                      {Number(order.deliveryCharge || 0) === 0
+                      {Number(
+                        order.deliveryCharge ||
+                          0
+                      ) === 0
                         ? 'FREE'
-                        : formatCurrency(order.deliveryCharge)}
+                        : formatCurrency(
+                            order.deliveryCharge
+                          )}
                     </span>
                   </div>
-
                 </div>
 
                 <div className="border-t border-[#DCCDC0] pt-4">
-
                   <div className="flex items-end justify-between gap-4">
                     <span className="font-bold text-[#351B19]">
                       Total
                     </span>
 
                     <span className="text-2xl font-bold text-[#54244F]">
-                      {formatCurrency(order.total)}
+                      {formatCurrency(
+                        order.total
+                      )}
                     </span>
                   </div>
-
                 </div>
-
               </div>
-
             </section>
 
             {/* PAYMENT REFERENCE */}
+
             {order.paymentReference && (
               <section className="rounded-[24px] border border-[#E4D6C8] bg-[#FFFDF8] p-5 shadow-[0_8px_25px_rgba(75,45,35,0.04)] md:p-6">
-
                 <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#B85C38]">
                   Transaction
                 </p>
@@ -586,7 +771,6 @@ function AdminOrderDetails() {
                 </h2>
 
                 <div className="mt-5 rounded-2xl border border-[#E7DCCF] bg-[#F8F1E5] p-4">
-
                   <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#91827A]">
                     Payment Reference
                   </p>
@@ -594,17 +778,14 @@ function AdminOrderDetails() {
                   <p className="mt-2 break-all font-mono text-sm font-bold text-[#40312D]">
                     {order.paymentReference}
                   </p>
-
                 </div>
-
               </section>
             )}
 
             {/* PAYMENT VERIFICATION */}
+
             <section className="overflow-hidden rounded-[24px] border border-[#E4D6C8] bg-[#FFFDF8] shadow-[0_8px_25px_rgba(75,45,35,0.04)]">
-
               <div className="border-b border-[#E9DED4] px-5 py-5 md:px-6">
-
                 <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#B85C38]">
                   Admin Action
                 </p>
@@ -612,17 +793,13 @@ function AdminOrderDetails() {
                 <h2 className="mt-1 text-xl font-bold text-[#351B19]">
                   Payment Verification
                 </h2>
-
               </div>
 
               <div className="p-5 md:p-6">
-
-                {order.paymentStatus === 'Paid' ? (
-
+                {order.paymentStatus ===
+                'Paid' ? (
                   <div className="rounded-2xl border border-[#D8E3CC] bg-[#EEF4E8] p-5">
-
                     <div className="flex items-start gap-3">
-
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#65754A] text-sm font-bold text-white">
                         ✓
                       </div>
@@ -637,18 +814,12 @@ function AdminOrderDetails() {
                           This order is ready for processing.
                         </p>
                       </div>
-
                     </div>
-
                   </div>
-
                 ) : (
-
                   <>
                     <div className="rounded-2xl border border-[#E7D6A8] bg-[#FFF6DF] p-4">
-
                       <div className="flex items-start gap-3">
-
                         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#C99A4A] text-sm font-bold text-white">
                           ₹
                         </div>
@@ -663,14 +834,14 @@ function AdminOrderDetails() {
                             before confirming this order.
                           </p>
                         </div>
-
                       </div>
-
                     </div>
 
                     <button
                       type="button"
-                      onClick={confirmPayment}
+                      onClick={
+                        confirmPayment
+                      }
                       disabled={confirming}
                       className="mt-4 w-full rounded-xl bg-[#65754A] px-5 py-3.5 text-sm font-bold text-white transition hover:bg-[#52613B] disabled:cursor-not-allowed disabled:opacity-60"
                     >
@@ -678,17 +849,124 @@ function AdminOrderDetails() {
                         ? 'Confirming Payment...'
                         : 'Confirm Payment'}
                     </button>
-
                   </>
                 )}
-
               </div>
-
             </section>
 
-            {/* ORDER INFO */}
-            <section className="rounded-[24px] border border-[#E4D6C8] bg-[#FFFDF8] p-5 shadow-[0_8px_25px_rgba(75,45,35,0.04)] md:p-6">
+            {/* ORDER STATUS MANAGEMENT */}
 
+            {order.paymentStatus ===
+              'Paid' && (
+              <section className="overflow-hidden rounded-[24px] border border-[#E4D6C8] bg-[#FFFDF8] shadow-[0_8px_25px_rgba(75,45,35,0.04)]">
+                <div className="border-b border-[#E9DED4] px-5 py-5 md:px-6">
+                  <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#B85C38]">
+                    Admin Action
+                  </p>
+
+                  <h2 className="mt-1 text-xl font-bold text-[#351B19]">
+                    Order Status
+                  </h2>
+                </div>
+
+                <div className="p-5 md:p-6">
+
+                  {/* CURRENT STATUS */}
+
+                  <div className="rounded-2xl border border-[#E7DCCF] bg-[#F8F1E5] p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[#91827A]">
+                      Current Status
+                    </p>
+
+                    <span
+                      className={`mt-2 inline-flex rounded-full border px-3 py-1.5 text-xs font-bold ${getOrderStatusStyles(
+                        order.orderStatus
+                      )}`}
+                    >
+                      {order.orderStatus ||
+                        'Pending'}
+                    </span>
+                  </div>
+
+                  {/* STATUS SELECT */}
+
+                  <label
+                    htmlFor="orderStatus"
+                    className="mt-5 block text-xs font-semibold uppercase tracking-wide text-[#91827A]"
+                  >
+                    Update Status
+                  </label>
+
+                  <select
+                    id="orderStatus"
+                    value={selectedStatus}
+                    onChange={(event) =>
+                      setSelectedStatus(
+                        event.target.value
+                      )
+                    }
+                    disabled={
+                      updatingStatus
+                    }
+                    className="mt-2 w-full rounded-xl border border-[#DCCDC0] bg-[#FFFDF8] px-4 py-3 text-sm font-semibold text-[#40312D] outline-none transition focus:border-[#54244F] focus:ring-2 focus:ring-[#54244F]/10 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <option value="Confirmed">
+                      Confirmed
+                    </option>
+
+                    <option value="Processing">
+                      Processing
+                    </option>
+
+                    <option value="Packed">
+                      Packed
+                    </option>
+
+                    <option value="Shipped">
+                      Shipped
+                    </option>
+
+                    <option value="Out for Delivery">
+                      Out for Delivery
+                    </option>
+
+                    <option value="Delivered">
+                      Delivered
+                    </option>
+                  </select>
+
+                  {/* UPDATE BUTTON */}
+
+                  <button
+                    type="button"
+                    onClick={
+                      updateOrderStatus
+                    }
+                    disabled={
+                      updatingStatus ||
+                      !selectedStatus ||
+                      selectedStatus ===
+                        order.orderStatus
+                    }
+                    className="mt-4 w-full rounded-xl bg-[#54244F] px-5 py-3.5 text-sm font-bold text-white transition hover:bg-[#421B3E] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {updatingStatus
+                      ? 'Updating Status...'
+                      : 'Update Order Status'}
+                  </button>
+
+                  <p className="mt-3 text-xs leading-5 text-[#806F67]">
+                    Payment must be confirmed
+                    before the order can move
+                    through the delivery stages.
+                  </p>
+                </div>
+              </section>
+            )}
+
+            {/* ORDER INFORMATION */}
+
+            <section className="rounded-[24px] border border-[#E4D6C8] bg-[#FFFDF8] p-5 shadow-[0_8px_25px_rgba(75,45,35,0.04)] md:p-6">
               <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#B85C38]">
                 Reference
               </p>
@@ -719,7 +997,8 @@ function AdminOrderDetails() {
                       order.orderStatus
                     )}`}
                   >
-                    {order.orderStatus || 'Pending'}
+                    {order.orderStatus ||
+                      'Pending'}
                   </span>
                 </div>
 
@@ -729,29 +1008,28 @@ function AdminOrderDetails() {
                   </p>
 
                   <p className="mt-1 text-sm font-semibold text-[#40312D]">
-                    {formatDate(order.createdAt)}
+                    {formatDate(
+                      order.createdAt
+                    )}
                   </p>
                 </div>
 
               </div>
-
             </section>
-
           </div>
-
         </div>
 
         {/* FOOTER */}
-        <div className="flex flex-col gap-2 px-2 py-5 text-xs text-[#8A7A72] sm:flex-row sm:items-center sm:justify-between">
 
+        <div className="flex flex-col gap-2 px-2 py-5 text-xs text-[#8A7A72] sm:flex-row sm:items-center sm:justify-between">
           <p>
             DwijasKalaRekha Admin
           </p>
 
           <p>
-            Verify payment manually before processing the order.
+            Verify payment manually before
+            processing the order.
           </p>
-
         </div>
 
       </div>

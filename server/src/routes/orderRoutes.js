@@ -946,4 +946,88 @@ router.put(
   }
 )
 
+/*
+==================================================
+UPDATE ORDER STATUS
+PUT /api/orders/:orderId/status
+ADMIN ONLY
+==================================================
+*/
+
+router.put(
+  '/:orderId/status',
+  protectAdmin,
+  async (req, res) => {
+    try {
+      const { orderStatus } = req.body
+
+      const allowedStatuses = [
+        'Confirmed',
+        'Processing',
+        'Packed',
+        'Shipped',
+        'Out for Delivery',
+        'Delivered',
+      ]
+
+      if (!orderStatus) {
+        return res.status(400).json({
+          message:
+            'Order status is required',
+        })
+      }
+
+      if (!allowedStatuses.includes(orderStatus)) {
+        return res.status(400).json({
+          message:
+            'Invalid order status',
+        })
+      }
+
+      const order =
+        await Order.findOne({
+          orderId: req.params.orderId,
+        })
+
+      if (!order) {
+        return res.status(404).json({
+          message:
+            'Order not found',
+        })
+      }
+
+      if (
+        order.paymentStatus !== 'Paid'
+      ) {
+        return res.status(400).json({
+          message:
+            'Payment must be confirmed before updating order status',
+        })
+      }
+
+      order.orderStatus =
+        orderStatus
+
+      await order.save()
+
+      res.status(200).json({
+        message:
+          'Order status updated successfully',
+
+        order,
+      })
+    } catch (error) {
+      console.error(
+        'Update order status failed:',
+        error
+      )
+
+      res.status(500).json({
+        message:
+          'Failed to update order status',
+      })
+    }
+  }
+)
+
 module.exports = router
